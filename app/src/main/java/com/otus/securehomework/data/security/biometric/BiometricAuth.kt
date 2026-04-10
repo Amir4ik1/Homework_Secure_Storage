@@ -11,7 +11,13 @@ import androidx.biometric.auth.authenticate
 import androidx.fragment.app.FragmentActivity
 import javax.inject.Inject
 
-class BiometricAuth @Inject constructor() {
+import androidx.biometric.BiometricPrompt
+import com.otus.securehomework.data.security.KeyProvider
+import javax.crypto.Cipher
+
+class BiometricAuth @Inject constructor(
+    private val keyProvider: KeyProvider
+) {
 
     suspend fun run(
         activity: FragmentActivity,
@@ -34,6 +40,13 @@ class BiometricAuth @Inject constructor() {
     private fun FragmentActivity.isBiometricAvailable(authenticator: Int) =
         BiometricManager.from(this).canAuthenticate(authenticator) == BiometricManager.BIOMETRIC_SUCCESS
 
+    private fun getEncryptor(): BiometricPrompt.CryptoObject {
+        val encryptor = Cipher.getInstance("AES/GCM/NoPadding").apply {
+            init(Cipher.ENCRYPT_MODE, keyProvider.getAesSecretKey())
+        }
+        return BiometricPrompt.CryptoObject(encryptor)
+    }
+
     private suspend fun runStrongBiometric(
         activity: FragmentActivity,
         onSuccess: () -> Unit,
@@ -43,9 +56,9 @@ class BiometricAuth @Inject constructor() {
             .setConfirmationRequired(true)
             .build()
         try {
-            authPrompt.authenticate(AuthPromptHost(activity))
+            authPrompt.authenticate(AuthPromptHost(activity), getEncryptor())
             onSuccess.invoke()
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             onFailure.invoke()
         }
     }
@@ -61,7 +74,7 @@ class BiometricAuth @Inject constructor() {
         try {
             authPrompt.authenticate(AuthPromptHost(activity))
             onSuccess.invoke()
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             onFailure.invoke()
         }
     }
