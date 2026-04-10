@@ -20,12 +20,12 @@ class UserPreferences
             preferences[ACCESS_TOKEN]
         }
 
-    val refreshToken: Flow<String?>
+    val refreshToken: Flow<CharSequence?>
         get() = context.dataStore.data.map { preferences ->
             preferences[REFRESH_TOKEN]
         }
 
-    suspend fun saveAccessTokens(accessToken: String?, refreshToken: String?) {
+    suspend fun saveAccessTokens(accessToken: CharSequence?, refreshToken: CharSequence?) {
         context.dataStore.edit { preferences ->
             accessToken?.let { preferences[ACCESS_TOKEN] = it }
             refreshToken?.let { preferences[REFRESH_TOKEN] = it }
